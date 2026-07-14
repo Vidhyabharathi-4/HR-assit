@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Assist - Visual Candidate Insights</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vis.js standalone files -->
+    <link rel="stylesheet" href="https://unpkg.com/vis-network/standalone/umd/vis-network.min.css">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- App Header -->
+        <header class="app-header glass-panel">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-brain" style="color: #fff; font-size: 18px;"></i>
+                </div>
+                <div>
+                    <span class="logo-text">HR Assist</span>
+                    <span class="logo-tag">Visual Resume Portal</span>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); box-shadow: 0 0 8px var(--success)"></span>
+                AI Processing Pipeline Active
+            </div>
+        </header>
+
+        <!-- Dashboard Workspace Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Sidebar: Upload and Selector -->
+            <section class="sidebar">
+                
+                <!-- Upload Zone -->
+                <div class="upload-area glass-panel" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <div class="upload-text">Upload Resume</div>
+                    <div class="upload-sub">Drag & drop PDF / click to browse</div>
+                    <input type="file" id="resume-file-input" style="display: none;" accept=".pdf,.docx">
+                </div>
+
+                <!-- Candidate Profiles List -->
+                <div class="candidate-list-container glass-panel">
+                    <h3 class="section-title">
+                        <i class="fas fa-users" style="color: var(--accent-purple)"></i>
+                        Candidates Profiles
+                    </h3>
+                    <div class="candidate-list" id="candidate-list">
+                        <!-- Populated by JavaScript -->
+                        <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+                            <i class="fas fa-circle-notch fa-spin" style="margin-bottom: 8px; font-size: 20px;"></i>
+                            <p style="font-size: 12px;">Loading profiles...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Panel: Split Screen Workspace -->
+            <section class="glass-panel main-content-pane" id="main-dashboard-content">
+                
+                <!-- PLACEHOLDER / EMPTY STATE -->
+                <div class="empty-state" id="empty-state-view">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <h2 class="empty-state-title">No Candidate Selected</h2>
+                    <p class="empty-state-desc">
+                        Select a candidate from the sidebar or upload a new resume (PDF format) to visualize skills, check automated GitHub code proofs, and view AI insights.
+                    </p>
+                </div>
+
+                <!-- ACTIVE CANDIDATE DETAILS PANEL -->
+                <div class="split-left" id="active-profile-view" style="display: none;">
+                    
+                    <!-- Candidate Card Header -->
+                    <div class="candidate-detail-header">
+                        <div class="candidate-info-card">
+                            <div class="candidate-avatar" id="candidate-avatar-bubble">U</div>
+                            <div class="candidate-text-info">
+                                <h2 id="profile-name">Candidate Name</h2>
+                                <div class="contact-info" id="profile-contacts">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        <div id="github-proof-trigger-container">
+                            <!-- Populated by JS: Verify Github Proofs button -->
+                        </div>
+                    </div>
+
+                    <!-- Details Tab Buttons -->
+                    <div class="details-tabs">
+                        <button class="tab-btn active" data-tab="mindmap">
+                            <i class="fas fa-project-diagram"></i> Interactive Skill Mindmap
+                        </button>
+                        <button class="tab-btn" data-tab="aisummary">
+                            <i class="fas fa-magic"></i> AI Summarization
+                        </button>
+                    </div>
+
+                    <!-- Tabs Content Area -->
+                    <div class="tab-content">
+                        <!-- Tab 1: Vis.js Mindmap canvas -->
+                        <div class="tab-pane active" id="tab-mindmap" style="padding: 15px;">
+                            <div id="mindmap-container"></div>
+                            
+                            <div class="mindmap-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #a855f7;"></span>
+                                    <span>Root Node</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #3b82f6;"></span>
+                                    <span>Programming Languages</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #10b981;"></span>
+                                    <span>Frameworks & Web tech</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #f59e0b;"></span>
+                                    <span>Databases</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #ef4444;"></span>
+                                    <span>Devops & Tools</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: AI Bullet Summaries -->
+                        <div class="tab-pane" id="tab-aisummary">
+                            <div class="ai-summary-grid">
+                                
+                                <div class="summary-block-main">
+                                    <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--accent-purple); margin-bottom: 8px; letter-spacing: 0.5px;">Executive Summary</h4>
+                                    <p id="summary-text">AI generating summary points...</p>
+                                </div>
+
+                                <div class="summary-cards-row">
+                                    <!-- Strengths Card -->
+                                    <div class="summary-card strengths">
+                                        <div class="summary-card-title">
+                                            <i class="fas fa-medal"></i> Key Strengths
+                                        </div>
+                                        <ul class="summary-list" id="strengths-list">
+                                            <!-- JS populated -->
+                                        </ul>
+                                    </div>
+
+                                    <!-- Suited Roles Card -->
+                                    <div class="summary-card roles">
+                                        <div class="summary-card-title">
+                                            <i class="fas fa-briefcase"></i> Suited Roles
+                                        </div>
+                                        <ul class="summary-list" id="roles-list">
+                                            <!-- JS populated -->
+                                        </ul>
+                                    </div>
+
+                                    <!-- Red Flags Card -->
+                                    <div class="summary-card red-flags">
+                                        <div class="summary-card-title">
+                                            <i class="fas fa-exclamation-triangle"></i> Areas for Development
+                                        </div>
+                                        <ul class="summary-list" id="redflags-list">
+                                            <!-- JS populated -->
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT SPLITSCREEN PANE (GitHub project validation proof) -->
+                <div class="split-right" id="github-verification-pane">
+                    
+                    <div class="github-pane-header">
+                        <span class="github-pane-title">
+                            <i class="fab fa-github" style="color: var(--accent-indigo); font-size: 20px;"></i>
+                            Project Proof Checks
+                        </span>
+                        <button class="close-btn" id="close-github-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="github-pane-content">
+                        <!-- Repository Links Selector -->
+                        <div class="repo-selector">
+                            <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Extracted Links</span>
+                            <div id="github-links-list" style="display: flex; flex-direction: column; gap: 8px;">
+                                <!-- JS populated -->
+                            </div>
+                        </div>
+
+                        <!-- Active Proof Details Card -->
+                        <div id="github-repo-details" style="display: flex; flex-direction: column; gap: 20px; flex: 1;">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Global Loader Overlay -->
+    <div id="global-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(8, 7, 17, 0.85); backdrop-filter: blur(10px); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; gap: 15px;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 45px; color: var(--accent-purple);"></i>
+        <span class="loader-text" style="font-size: 15px; color: var(--text-primary); font-weight: 500;">Processing Resume...</span>
+    </div>
+
+    <!-- Client-Side App Logic -->
+    <script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>
